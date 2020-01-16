@@ -1,4 +1,4 @@
-### Prueba Front - LQN
+## Prueba Front - LQN
 
 ## Objetivo: 
 Desarrollar un sitio web para los fanáticos de star wars.
