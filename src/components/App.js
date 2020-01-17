@@ -5,6 +5,7 @@ import CharacterList from './CharacterList';
 
 let BgStyle = {
   width: "100%",
+  minHeight: "100vh",
   position: "absolute",
   top: "0",
   background: `url(${Background})`,
@@ -12,6 +13,9 @@ let BgStyle = {
 };
 
 let ContainerStyle = {
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "center",
   maxWidth: "1200px",
   margin: "0 auto",
   color: "white"

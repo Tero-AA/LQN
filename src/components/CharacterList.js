@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Query } from 'react-apollo';
 import gql from 'graphql-tag';
-import { Card, Button, Modal } from "antd";
+import { Card, Button, Modal, Skeleton, Tag } from "antd";
 import 'antd/dist/antd.css';
+
 
 const CHARACTERS_QUERY = gql`
   {
-    allPeople (first: 10){
+    allPeople  {
         edges {
             node {
               birthYear
@@ -18,13 +19,22 @@ const CHARACTERS_QUERY = gql`
               mass
               name
               skinColor
-              species { name }
-              filmConnection { edges { node { title } } }
+              filmConnection { edges { node { 
+                title 
+                director
+                openingCrawl
+                planetConnection { edges { node {
+                  name 
+                }}}
+              }}}
             }
         }
     }
   }
 `;
+
+const initialState = { 0: false, 1: false, 2: false, 3: false, 4: false, 5: false, 6: false, 7: false, 8: false, 9: false };
+
 
 const gridStyle = {
   width: '50%',
@@ -43,70 +53,88 @@ const cardStyle = {
 
 function CharacterList() {
 
-  const [state, setState] = useState([{ visible: false }]);
   const [characters, setCharacters] = useState([]);
+  const [state, setState] = useState(initialState);
 
   const showModal = e => {
     e.preventDefault();
-    setState({ visible: true })
+    const name = e.target.id
+    setState({ ...state, [name]: true })
   };
 
   const handleOk = e => {
     e.preventDefault();
-    setState({ visible: false })
+    setState(initialState)
   };
 
   const handleCancel = e => {
     e.preventDefault();
-    setState({ visible: false })
+    setState(initialState)
+  };
+
+  const getCharacters = () => {
+    return (
+      <Query query={CHARACTERS_QUERY}>
+        {({ loading, error, data }) => {
+          if (loading) return (
+            <Card style={cardStyle}>
+              <Skeleton loading={loading} avatar active></Skeleton>
+            </Card>
+          )
+          if (error) {
+            console.log(error)
+            return <div>Error</div>
+          }
+
+          setCharacters(data.allPeople.edges)
+
+
+          return (
+            <Card style={cardStyle}>
+              {characters.map((card, index) =>
+
+                <Card.Grid style={gridStyle} key={index}>
+                  {card.node.name}
+                  <br />
+                  <Button id={index} onClick={showModal} ghost>Mas información</Button>
+                  <Modal
+                    title={card.node.name}
+                    visible={state[index]}
+                    onOk={handleOk}
+                    onCancel={handleCancel}
+                    key={index}
+                  >
+                    <p>Nombre: {card.node.name}</p>
+                    <p>Año de nacimiento: {card.node.birthYear}</p>
+                    <p>Genero: {card.node.gender}</p>
+                    <p>Color de pelo: {card.node.hairColor}</p>
+                    <p>Estatura: {card.node.height}</p>
+                    <p>Planeta de nacimiento: {card.node.homeworld.name}</p>
+                    <p>Masa: {card.node.mass}</p>
+                    <p>Color de piel: {card.node.skinColor}</p>
+                    <h1>Participa en las siguientes peliculas:</h1>
+
+                    {card.node.filmConnection.edges.map(film =>
+                      <div>
+                        <h1>{film.node.title}</h1>
+                        <h2>Director: {film.node.director}</h2>
+                        <p>{film.node.openingCrawl}</p>
+                        {film.node.planetConnection.edges.map(planet => <Tag color="purple">{planet.node.name}</Tag>)}
+                      </div>)
+                    }
+                  </Modal>
+                </Card.Grid>)}
+
+            </Card>
+          )
+
+        }}
+      </Query>
+    )
   };
 
   return (
-    <Query query={CHARACTERS_QUERY}>
-      {({ loading, error, data }) => {
-        if (loading) return (
-          <Card style={cardStyle}>
-            <Card.Grid style={gridStyle}>Loading ...</Card.Grid>
-            <Card.Grid style={gridStyle}>Loading ...</Card.Grid>
-            <Card.Grid style={gridStyle}>Loading ...</Card.Grid>
-            <Card.Grid style={gridStyle}>Loading ...</Card.Grid>
-            <Card.Grid style={gridStyle}>Loading ...</Card.Grid>
-            <Card.Grid style={gridStyle}>Loading ...</Card.Grid>
-            <Card.Grid style={gridStyle}>Loading ...</Card.Grid>
-            <Card.Grid style={gridStyle}>Loading ...</Card.Grid>
-            <Card.Grid style={gridStyle}>Loading ...</Card.Grid>
-            <Card.Grid style={gridStyle}>Loading ...</Card.Grid>
-          </Card>
-        )
-        if (error) return <div>Error</div>
-
-        setCharacters(data.allPeople.edges)
-        console.log(characters);
-
-
-        return (
-          <Card style={cardStyle}>
-            {characters.map(card => <Card.Grid
-              style={gridStyle}
-              key={card.node.id}
-            >
-              {card.node.name}
-              <br />
-              <Button onClick={showModal} ghost>Mas información</Button>
-              <Modal
-                title={card.node.name}
-                visible={state.visible}
-                onOk={handleOk}
-                onCancel={handleCancel}
-              >
-                <p>Nombre: {card.node.name}</p>
-              </Modal>
-            </Card.Grid>)}
-          </Card>
-        )
-
-      }}
-    </Query>
+    getCharacters()
   );
 }
 

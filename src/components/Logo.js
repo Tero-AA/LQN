@@ -2,8 +2,9 @@ import React from 'react';
 import Image from '../images/Star-Wars-Símbolo.png';
 
 let LogoStyle = {
-  width: "100%",
+  width: "50%",
   maxWidth: "1200px",
+  margin: "50px auto"
 };
 
 function Logo() {
